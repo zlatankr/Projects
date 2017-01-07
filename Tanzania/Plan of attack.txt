@@ -1,0 +1,34 @@
+PLAN OF ATTACK
+
+Cross-Validation Approach:
+- Nested k-fold cross-validation 
+	- no need for test set
+
+Hyperparameter Tuning:
+- Gridsearch
+
+Models:
+- SVC (standardize)
+- Random Forest (no need to standardize)
+- KNN (standardize)
+- Ensemble method
+- AdaBoost
+
+Model processing:
+- Pipeline
+
+Preprocessing:
+
+- Each variable should be categorized as:
+	- Keep as is:
+		- Keep numeric columns with no nulls
+		- Keep categorical columns with 10 or fewer unique values
+	- Drop:
+		- Drop anything with more than 20% nulls
+		- Drop meaningless columns (such as ID)
+	- Transform numeric columns:
+		- Impute missing values (check for zeros)
+		- Change date columns to months (or quarters)
+			- group like months together based on functionality
+	- Transform categorical columns:
+		- Combine categories based on functionality (min 70%), non-functionality (min 50%), needs repair (min 20%), or mixed. If new value from test set, set to mixed.
