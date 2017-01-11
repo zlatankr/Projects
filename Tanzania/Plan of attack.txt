@@ -10,6 +10,7 @@ Hyperparameter Tuning:
 Models:
 - SVC (standardize)
 - Random Forest (no need to standardize)
+	- first attempt: 1000 trees
 - KNN (standardize)
 - Ensemble method
 - AdaBoost
@@ -23,6 +24,7 @@ Preprocessing:
 	- Keep as is:
 		- Keep numeric columns with no nulls
 		- Keep categorical columns with 10 or fewer unique values
+			- Transform into dummy variables
 	- Drop:
 		- Drop anything with more than 20% nulls
 		- Drop meaningless columns (such as ID)
@@ -32,3 +34,19 @@ Preprocessing:
 			- group like months together based on functionality
 	- Transform categorical columns:
 		- Combine categories based on functionality (min 70%), non-functionality (min 50%), needs repair (min 20%), or mixed. If new value from test set, set to mixed.
+Research:
+- when does the curse of dimensionality kick in? (add to data science dictionary)
+- Need to understand the fillna by groups process better:
+    data = X_train.groupby(['district_code']).longitude
+    X_train['longitude'] = data.transform(lambda x: x.fillna(x.mean()))
+
+    med = X_train.groupby('district_code')['latitude'].transform('mean')
+    X_train['latitude'].fillna(med)
+
+    fill_mean = lambda g: g.fillna(g.mean())
+    X_train['gps_height'] = X_train.groupby('district_code').gps_height.apply(fill_mean)
+
+	fill_values = dict(X_train['longitude'].groupby(X_train['district_code']).mean())
+
+	fill_func = lambda g: g.fillna(fill_values[g.name])
+	X_train['longitude'] = X_train['longitude'].groupby(X_train['district_code']).apply(fill_func)
