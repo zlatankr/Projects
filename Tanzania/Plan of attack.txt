@@ -9,6 +9,7 @@ Hyperparameter Tuning:
 
 Models:
 - SVC (standardize)
+	- 
 - Random Forest (no need to standardize)
 	- first attempt: 1000 trees
 - KNN (standardize)
@@ -50,3 +51,14 @@ Research:
 
 	fill_func = lambda g: g.fillna(fill_values[g.name])
 	X_train['longitude'] = X_train['longitude'].groupby(X_train['district_code']).apply(fill_func)
+- it appears that with RF, cross-validation may in fact be better than the OOB score. With 100 trees, OOB score was .8054, CV score was 0.7977, adn true score was 0.7907
+- appears that a strong correlation between coefficients causes issues in RF. removing repetitive columns improves model performance by a lot.
+
+Results:
+1. RF, 1000 trees (OOB score .8032): 0.7813
+2. RF, 100 trees (OOB score .8030): 0.7812
+3. RF, 100 trees, remove dummies with less than 100 values (OOB score .79): 0.7701
+4. RF, 100 trees, keep ALL dummies (OOB score .8054): 0.7907
+5. RF, 1000 trees, keep ALL dummies (OOB score .8076): 0.7935
+6. RF, 500 trees, keeps ALL dummies, remove correlated columns (OOB score .8108; CV score 0.8034): 0.7966
+7. RF, 1000 trees, keeps ALL dummies, remove correlated columns, fix imputation (OOB score .8083; CV score 0.8001): 0.7927
