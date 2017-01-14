@@ -44,7 +44,7 @@ def dates(X_train, X_test):
         i['date_recorded'] = pd.to_datetime(i['date_recorded'])
         i['year_recorded'] = i['date_recorded'].apply(lambda x: x.year)
         i['month_recorded'] = i['date_recorded'].apply(lambda x: x.month)
-        pd.to_datetime(i['date_recorded']).apply(lambda x: x.toordinal())
+        i['date_recorded'] = (pd.to_datetime(i['date_recorded'])).apply(lambda x: x.toordinal())
     return X_train, X_test
 
 def locs(X_train, X_test):
