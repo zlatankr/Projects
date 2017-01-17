@@ -9,11 +9,10 @@ Hyperparameter Tuning:
 
 Models:
 - SVC (standardize)
-	- 
 - Random Forest (no need to standardize)
 	- first attempt: 1000 trees
 - KNN (standardize)
-- Ensemble method
+- XGBoost
 - AdaBoost
 
 Model processing:
@@ -21,21 +20,27 @@ Model processing:
 
 Preprocessing:
 
-- Each variable should be categorized as:
-	- Keep as is:
-		- Keep numeric columns with no nulls
-		- Keep categorical columns with 10 or fewer unique values
-			- Transform into dummy variables
-	- Drop:
-		- Drop anything with more than 20% nulls
-		- Drop meaningless columns (such as ID)
-	- Transform numeric columns:
-		- Impute missing values (check for zeros)
-		- Change date columns to months (or quarters)
-			- group like months together based on functionality
-	- Transform categorical columns:
-		- Combine categories based on functionality (min 70%), non-functionality (min 50%), needs repair (min 20%), or mixed. If new value from test set, set to mixed.
-Research:
+Phase 1:
+- delete:
+	- redundant columns
+	- meaningless columns
+	- columns with too many values
+	- columns with too many nulls
+
+- transform:
+	- impute missing values using appropriate strategy
+	- convert categorical variables into dummy variables
+	- datime into year column and month column
+	- datetime to an ordinal value
+
+Phase 2:
+- transform:
+	- dedupe columns with more than 90% correlation
+	- remove columns with sum less than 30?
+	- remove columns with class distribution identical to overall population?
+
+
+Notes:
 - when does the curse of dimensionality kick in? (add to data science dictionary)
 - Need to understand the fillna by groups process better:
     data = X_train.groupby(['district_code']).longitude
@@ -54,6 +59,9 @@ Research:
 - it appears that with RF, cross-validation may in fact be better than the OOB score. With 100 trees, OOB score was .8054, CV score was 0.7977, adn true score was 0.7907
 - appears that a strong correlation between coefficients causes issues in RF. removing repetitive columns improves model performance by a lot.
 - need to save every dataset, every model, and every submission as a pickle, and map each one to each other.
+- pd.to_pickle results in file sizes that are twice as big as pd.to_csv
+	- might need to research SQLite databases instead
+- a manual test of different min_samples_split sizes (GridSearchCV broke down for some reason) showed that the results were same for n=2, 50, and 100
 
 Results:
 1. RF, 1000 trees (OOB score .8032): 0.7813
@@ -64,6 +72,7 @@ Results:
 6. RF, 500 trees, keeps ALL dummies, remove correlated columns (OOB score .8108; CV score 0.8034): 0.7966
 7. RF, 1000 trees, keeps ALL dummies, remove correlated columns, fix imputation (OOB score .8083; CV score 0.8001): 0.7927
 8. RF, 500 trees, keeps ALL dummies, fix imputation (OOB score .8083; CV score 0.8001): 0.7927
+9. RF, 1000 trees, keeps ALL dummies, fix imputation (OOB score .8080; CV score 0.8004): 0.8002
 
 Proper workflow:
 1. File that loads the data into directory
