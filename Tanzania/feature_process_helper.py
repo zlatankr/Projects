@@ -21,7 +21,7 @@ def removal(X_train, X_test):
     # region: drop this b/c is seems very similar to region_code, though not 100% sure about this one!
     """
     z = ['id', 'amount_tsh', 'num_private', 'wpt_name', 
-          'subvillage', 'scheme_name', 'region']
+          'subvillage', 'scheme_name', 'region', 'installer']
     for i in z:
         del X_train[i]
         del X_test[i]
@@ -105,39 +105,7 @@ def dummies(X_train, X_test):
         del X_test[column]
     return X_train, X_test
 
-
 def dummies2(X_train, X_test):
-    columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
-    status = pd.get_dummies(y_train['status_group'])
-    for column in columns:
-        func = []
-        non_func = []
-        repair = []
-        X_train[column].fillna('NULL', inplace = True)
-        dumms = pd.get_dummies(X_train[column], prefix = column+'_')
-        for i in dumms.columns:
-            if status[dumms[i] == 1]['functional'].mean() > (status['functional'].mean() + .1):
-                func.append(i)
-            elif status[dumms[i] == 1]['non functional'].mean() > (status['non functional'].mean() + .1):
-                non_func.append(i)
-            elif status[dumms[i] == 1]['functional needs repair'].mean() > (status['functional needs repair'].mean() + .1):
-                repair.append(i)
-        func = [i for i in func if i in pd.get_dummies(X_test[column], prefix = column+'_').columns]
-        non_func = [i for i in non_func if i in pd.get_dummies(X_test[column], prefix = column+'_').columns]
-        repair = [i for i in repair if i in pd.get_dummies(X_test[column], prefix = column+'_').columns]
-        
-        for i in [X_train, X_test]:
-            if len(func) > 0:
-                i['func_'+column] = pd.get_dummies(i[column], prefix = column+'_')[func].max(axis=1)
-            if len(non_func) > 0:    
-                i['non_func_'+column] = pd.get_dummies(i[column], prefix = column+'_')[non_func].max(axis=1)
-            if len(repair) > 0:
-                i['repair_'+column] = pd.get_dummies(i[column], prefix = column+'_')[repair].max(axis=1)
-        del X_train[column]
-        del X_test[column]
-    return X_train, X_test
-
-def dummies3(X_train, X_test):
     columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
     status = pd.get_dummies(y_train['status_group'])
     for column in columns:
