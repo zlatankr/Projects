@@ -20,8 +20,9 @@ def removal(X_train, X_test):
     # num_private: we will delete this column because ~99% of the values are zeros.
     # region: drop this b/c is seems very similar to region_code, though not 100% sure about this one!
     """
-    z = ['id', 'amount_tsh', 'num_private', 'wpt_name', 
-          'subvillage', 'scheme_name', 'region', 'installer']
+    z = ['id', 'amount_tsh', 'num_private', 'wpt_name', 'subvillage', 'scheme_name', 'region', 
+          'recorded_by', 'quantity', 'quality_group', 'source_type', 'payment', 'waterpoint_type_group',
+         'extraction_type_group']
     for i in z:
         del X_train[i]
         del X_test[i]
@@ -92,36 +93,24 @@ def codes(X_train, X_test):
 def dummies(X_train, X_test):
     columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
     for column in columns:
-        good_cols = []
         X_train[column].fillna('NULL', inplace = True)
-        dumms = pd.get_dummies(X_train[column], prefix = column+'_')
-        for i in dumms.columns:
-        #    if chi2_contingency(pd.crosstab(dumms[i], y_train['status_group']))[1] < .001:
-            good_cols.append(i)
-        good_cols = [i for i in good_cols if i in pd.get_dummies(X_test[column], prefix = column+'_').columns]
-        X_train = pd.concat((X_train, pd.get_dummies(X_train[column], prefix = column+'_')[good_cols]), axis = 1)
-        X_test = pd.concat((X_test, pd.get_dummies(X_test[column], prefix = column+'_')[good_cols]), axis = 1)
+        good_cols = [column+'_'+i for i in X_train[column].unique() if i in X_test[column].unique()]
+        X_train = pd.concat((X_train, pd.get_dummies(X_train[column], prefix = column)[good_cols]), axis = 1)
+        X_test = pd.concat((X_test, pd.get_dummies(X_test[column], prefix = column)[good_cols]), axis = 1)
         del X_train[column]
         del X_test[column]
     return X_train, X_test
 
-def dummies2(X_train, X_test):
-    columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
+def meaningful(X_train, X_test):
     status = pd.get_dummies(y_train['status_group'])
-    for column in columns:
-        good_cols = []
-        X_train[column].fillna('NULL', inplace = True)
-        dumms = pd.get_dummies(X_train[column], prefix = column+'_')
-        for i in dumms.columns:
-            if status[dumms[i] == 1]['functional'].mean() > (status['functional'].mean() + .1):
-                good_cols.append(i)
-            elif status[dumms[i] == 1]['non functional'].mean() > (status['non functional'].mean() + .1):
-                good_cols.append(i)
-            elif status[dumms[i] == 1]['functional needs repair'].mean() > (status['functional needs repair'].mean() + .1):
-                good_cols.append(i)
-        good_cols = [i for i in good_cols if i in pd.get_dummies(X_test[column], prefix = column+'_').columns]
-        X_train = pd.concat((X_train, pd.get_dummies(X_train[column], prefix = column+'_')[good_cols]), axis = 1)
-        X_test = pd.concat((X_test, pd.get_dummies(X_test[column], prefix = column+'_')[good_cols]), axis = 1)
-        del X_train[column]
-        del X_test[column]
+    good_cols = []
+    for i in X_train.columns[12:]:
+        if status[X_train[i] == 1]['non functional'].mean() > (status['non functional'].mean() + .0510):
+            good_cols.append(i)
+        elif status[X_train[i] == 1]['functional needs repair'].mean() > (status['functional needs repair'].mean() + .0510):
+            good_cols.append(i)
+        elif status[X_train[i] == 1]['functional'].mean() > (status['functional'].mean() + .0510):
+            good_cols.append(i)
+    X_train2 = pd.concat((X_train.iloc[:, :12], X_train[good_cols]), axis = 1)
+    X_test2 = pd.concat((X_test.iloc[:, :12], X_test[good_cols]), axis = 1)
     return X_train, X_test
