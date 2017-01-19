@@ -7,6 +7,18 @@ This files stores all the essential helper functions for variable pre-processing
 import numpy as np
 import pandas as pd
 
+def amount_tsh(X_train, X_test):
+    """
+    convert this item into a categorical variable
+    """
+    for i in [X_train, X_test]:
+        i['amntsh'] = pd.qcut(X_train[X_train['amount_tsh'] <> 0]['amount_tsh'], 4)
+        i['amntshnull'] = i['amntsh'].isnull().apply(lambda x: float(x))
+    X_train = pd.concat((X_train, pd.get_dummies(X_train['amntsh'], prefix = 'amntsh')), axis = 1)
+    X_test = pd.concat((X_test, pd.get_dummies(X_test['amntsh'], prefix = 'amntsh')), axis = 1)
+    del X_train['amntsh']
+    del X_test['amntsh']
+    return X_train, X_test
 
 def removal(X_train, X_test):
     """
@@ -20,7 +32,7 @@ def removal(X_train, X_test):
     # num_private: we will delete this column because ~99% of the values are zeros.
     # region: drop this b/c is seems very similar to region_code, though not 100% sure about this one!
     """
-    z = ['id', 'amount_tsh', 'num_private', 'wpt_name', 'subvillage', 'scheme_name', 'region', 
+    z = ['id','amount_tsh',  'num_private', 'wpt_name', 'subvillage', 'scheme_name', 'region', 
           'recorded_by', 'quantity', 'quality_group', 'source_type', 'payment', 'waterpoint_type_group',
          'extraction_type_group']
     for i in z:
@@ -35,6 +47,20 @@ def construction(X_train, X_test):
     """
     for i in [X_train, X_test]:
         i['construction_year'].replace(0, X_train[X_train['construction_year'] <> 0]['construction_year'].mean(), inplace=True)
+    return X_train, X_test
+
+def construction2(X_train, X_test):
+    """
+    construction_year has 35% nulls, so we impute the nulls with the column mean
+    """
+    for i in [X_train, X_test]:
+        i['construction_year'].replace(0., np.NaN, inplace = True)
+        i['construction_year'].replace(1., np.NaN, inplace = True)
+        data = X_train.groupby(['funder'])['construction_year']
+        i['construction_year'] = data.transform(lambda x: x.fillna(x.mean()))
+        data = X_train.groupby(['installer'])['construction_year']
+        i['construction_year'] = data.transform(lambda x: x.fillna(x.mean()))
+        i['construction_year'].fillna(X_train['construction_year'].mean(), inplace=True)
     return X_train, X_test
 
 def dates(X_train, X_test):
