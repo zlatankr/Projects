@@ -62,6 +62,9 @@ Notes:
 - pd.to_pickle results in file sizes that are twice as big as pd.to_csv
 	- might need to research SQLite databases instead
 - a manual test of different min_samples_split sizes (GridSearchCV broke down for some reason) showed that the results were same for n=2, 50, and 100
+- imputation techniques matter!
+- is more trees always better (or is there a negative testing effect of overfitting)?
+
 
 Results:
 1. RF, 1000 trees (OOB score .8032): 0.7813
