@@ -42,6 +42,7 @@ Phase 2:
 
 Notes:
 - when does the curse of dimensionality kick in? (add to data science dictionary)
+	- done
 - Need to understand the fillna by groups process better:
     data = X_train.groupby(['district_code']).longitude
     X_train['longitude'] = data.transform(lambda x: x.fillna(x.mean()))
@@ -64,7 +65,12 @@ Notes:
 - a manual test of different min_samples_split sizes (GridSearchCV broke down for some reason) showed that the results were same for n=2, 50, and 100
 - imputation techniques matter!
 - is more trees always better (or is there a negative testing effect of overfitting)?
-
+- need to name my submission files with more details
+- when doing the whole process - need to be able to keep track of everything:
+	- need to know why you made every decision that you made
+	- need to be able to reproduce every single model that you ever created
+	- this will result in a lot of code and notes, but it will all eventually be archived
+		- only the final model and the clean version need to be presented (but again, with clear documentation of that whole process).
 
 Results:
 1. RF, 1000 trees (OOB score .8032): 0.7813
@@ -74,8 +80,15 @@ Results:
 5. RF, 1000 trees, keep ALL dummies (OOB score .8076): 0.7935
 6. RF, 500 trees, keeps ALL dummies, remove correlated columns (OOB score .8108; CV score 0.8034): 0.7966
 7. RF, 1000 trees, keeps ALL dummies, remove correlated columns, fix imputation (OOB score .8083; CV score 0.8001): 0.7927
-8. RF, 500 trees, keeps ALL dummies, fix imputation (OOB score .8083; CV score 0.8001): 0.7927
-9. RF, 1000 trees, keeps ALL dummies, fix imputation (OOB score .8080; CV score 0.8004): 0.8002
+8. RF, 500 trees, keeps ALL dummies, fix imputation (OOB score .8080; CV score 0.8004): 0.8002
+9. RF, 1000 trees, keeps ALL dummies, fix imputation, remove correlation (OOB score .8080; CV score 0.8004): 0.8002
+10. RF, 1000 trees, keeps ALL dummies, fix imputation (OOB score .8080; CV score 0.8004): 0.8005
+11. RF, 1000 trees, construction2, gini, min_samples_split = 12 (OOB score .8142): 0.7919
+12. RF, 1000 trees, construction2, gini (OOB score .8142): 0.7946
+13. RF, 1000 trees, construction2 (OOB score ~.807): 0.7952
+14. R4, y_test1 (OOB score 0.8092; CV score 0.8027): 0.7947
+15. RF, y_test3 (OOB score 0.8142; CV score 0.8072): 0.8002
+16. RF, y_test4 (OOB score 0.8151; CV score 0.8072): 0.7921
 
 Proper workflow:
 1. File that loads the data into directory
