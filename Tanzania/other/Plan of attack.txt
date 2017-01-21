@@ -65,6 +65,7 @@ Notes:
 - a manual test of different min_samples_split sizes (GridSearchCV broke down for some reason) showed that the results were same for n=2, 50, and 100
 - imputation techniques matter!
 - is more trees always better (or is there a negative testing effect of overfitting)?
+	- when using oob score, it seemed that more trees is not necessarily better (that there's an ideal number), but in practice, more trees always validated better
 - need to name my submission files with more details
 - when doing the whole process - need to be able to keep track of everything:
 	- need to know why you made every decision that you made
@@ -89,6 +90,9 @@ Results:
 14. R4, y_test1 (OOB score 0.8092; CV score 0.8027): 0.7947
 15. RF, y_test3 (OOB score 0.8142; CV score 0.8072): 0.8002
 16. RF, y_test4 (OOB score 0.8151; CV score 0.8072): 0.7921
+17. RF, y_test7 (OOB score 0.8150; CV score 0.8075): 0.7936
+18. RF, y_test6 (OOB score 0.8138; CV score 0.8065): 0.7985
+19. RF, y_test8 (OOB score 0.8144: CV score 0.8072): 0.8019
 
 Proper workflow:
 1. File that loads the data into directory
