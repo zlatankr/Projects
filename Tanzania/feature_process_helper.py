@@ -119,6 +119,10 @@ def codes(X_train, X_test):
     return X_train, X_test
 
 def dummies(X_train, X_test):
+    X_train['district_code'] = X_train['district_code'].apply(lambda x: str(x))
+    X_train['region_code'] = X_train['region_code'].apply(lambda x: str(x))
+    X_test['district_code'] = X_test['district_code'].apply(lambda x: str(x))
+    X_test['region_code'] = X_test['region_code'].apply(lambda x: str(x))
     columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
     for column in columns:
         X_train[column].fillna('NULL', inplace = True)
@@ -143,15 +147,18 @@ def meaningful(X_train, X_test):
     X_test2 = pd.concat((X_test.iloc[:, :12], X_test[good_cols]), axis = 1)
     return X_train, X_test
 
-def lda(X_train, X_test, y_train):
+def lda(X_train, X_test, y_train, cols):
     sc = StandardScaler()
-    X_train_std = sc.fit_transform(X_train[['population', 'gps_height', 'latitude', 'longitude']])
-    X_test_std = sc.transform(X_test[['population', 'gps_height', 'latitude', 'longitude']])
+    X_train_std = sc.fit_transform(X_train[cols])
+    X_test_std = sc.transform(X_test[cols])
     lda = LDA(n_components=None)
     X_train_lda = lda.fit_transform(X_train_std, y_train.values.ravel())
     X_test_lda = lda.transform(X_test_std)
     X_train = pd.concat((pd.DataFrame(X_train_lda), X_train), axis=1)
     X_test = pd.concat((pd.DataFrame(X_test_lda), X_test), axis=1)
+    for i in cols:
+        del X_train[i]
+        del X_test[i]
     return X_train, X_test
 
 def gini(p):
