@@ -6,6 +6,8 @@ This files stores all the essential helper functions for variable pre-processing
 """
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 
 def amount_tsh(X_train, X_test):
     """
@@ -140,3 +142,23 @@ def meaningful(X_train, X_test):
     X_train2 = pd.concat((X_train.iloc[:, :12], X_train[good_cols]), axis = 1)
     X_test2 = pd.concat((X_test.iloc[:, :12], X_test[good_cols]), axis = 1)
     return X_train, X_test
+
+def lda(X_train, X_test, y_train):
+    sc = StandardScaler()
+    X_train_std = sc.fit_transform(X_train[['population', 'gps_height', 'latitude', 'longitude']])
+    X_test_std = sc.transform(X_test[['population', 'gps_height', 'latitude', 'longitude']])
+    lda = LDA(n_components=None)
+    X_train_lda = lda.fit_transform(X_train_std, y_train.values.ravel())
+    X_test_lda = lda.transform(X_test_std)
+    X_train = pd.concat((pd.DataFrame(X_train_lda), X_train), axis=1)
+    X_test = pd.concat((pd.DataFrame(X_test_lda), X_test), axis=1)
+    return X_train, X_test
+
+def gini(p):
+    return 1-(p**2 + (1-p)**2)
+
+def impurity(X_train):
+    imp = {}
+    for i in X_train.columns[17:]:
+        imp[i] = gini(X_train[i].mean())
+    return imp
