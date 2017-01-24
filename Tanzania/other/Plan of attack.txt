@@ -72,6 +72,12 @@ Notes:
 	- need to be able to reproduce every single model that you ever created
 	- this will result in a lot of code and notes, but it will all eventually be archived
 		- only the final model and the clean version need to be presented (but again, with clear documentation of that whole process).
+- LDA worked really well:
+	- increased model predictivity by .5%
+	- needed to remove modeled columns
+- removing tiny columns didn't have a positive impact on results, although it didn't have a devestating impact neither:
+	- removing ~2500 columns lowered results by .06%
+	- removing ~1900 columns lowered results by .03%
 
 Results:
 1. RF, 1000 trees (OOB score .8032): 0.7813
@@ -93,6 +99,14 @@ Results:
 17. RF, y_test7 (OOB score 0.8150; CV score 0.8075): 0.7936
 18. RF, y_test6 (OOB score 0.8138; CV score 0.8065): 0.7985
 19. RF, y_test8 (OOB score 0.8144: CV score 0.8072): 0.8019
+20. RF, y_test9 (OOB score 0.8143): 0.8009
+21. RF, y_test10 (OOB score 0.8134): 0.7895
+22. RF, y_test11 (OOB score 0.8129): 0.8043
+23. RF, y_test14 (OOB score 0.8142): 0.8037
+24. RF, y_test15 (OOB score 0.8141): 0.8026
+25. RF, y_test13 (OOB score 0.8128): 0.8040
+26. RF, y_test18 (OOB score 0.8129): 0.8040
+
 
 Proper workflow:
 1. File that loads the data into directory
@@ -102,4 +116,3 @@ Proper workflow:
 	- load cleaned datasets that apply to this model
 	- run model with CV, generate score, and pickle that model
 	- run model diagnostics if necessary
-	- for selected models, generate submission file

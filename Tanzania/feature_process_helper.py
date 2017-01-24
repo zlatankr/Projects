@@ -119,10 +119,6 @@ def codes(X_train, X_test):
     return X_train, X_test
 
 def dummies(X_train, X_test):
-    X_train['district_code'] = X_train['district_code'].apply(lambda x: str(x))
-    X_train['region_code'] = X_train['region_code'].apply(lambda x: str(x))
-    X_test['district_code'] = X_test['district_code'].apply(lambda x: str(x))
-    X_test['region_code'] = X_test['region_code'].apply(lambda x: str(x))
     columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
     for column in columns:
         X_train[column].fillna('NULL', inplace = True)
