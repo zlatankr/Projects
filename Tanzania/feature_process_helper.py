@@ -76,6 +76,20 @@ def dates(X_train, X_test):
         i['date_recorded'] = (pd.to_datetime(i['date_recorded'])).apply(lambda x: x.toordinal())
     return X_train, X_test
 
+def dates2(X_train, X_test):
+    """
+    Turn year_recorded and month_recorded into dummy variables
+    """
+    for z in ['month_recorded', 'year_recorded']:
+        X_train[z] = X_train[z].apply(lambda x: str(x))
+        X_test[z] = X_test[z].apply(lambda x: str(x))
+        good_cols = [z+'_'+i for i in X_train[z].unique() if i in X_test[z].unique()]
+        X_train = pd.concat((X_train, pd.get_dummies(X_train[z], prefix = z)[good_cols]), axis = 1)
+        X_test = pd.concat((X_test, pd.get_dummies(X_test[z], prefix = z)[good_cols]), axis = 1)
+        del X_test[z]
+        del X_train[z]
+    return X_train, X_test
+
 def locs(X_train, X_test):
     """
     gps_height, latitude, longitude, population
@@ -143,7 +157,7 @@ def meaningful(X_train, X_test):
     X_test2 = pd.concat((X_test.iloc[:, :12], X_test[good_cols]), axis = 1)
     return X_train, X_test
 
-def lda(X_train, X_test, y_train, cols):
+def lda(X_train, X_test, y_train, cols=['population', 'gps_height', 'latitude', 'longitude']):
     sc = StandardScaler()
     X_train_std = sc.fit_transform(X_train[cols])
     X_test_std = sc.transform(X_test[cols])
@@ -165,3 +179,19 @@ def impurity(X_train):
     for i in X_train.columns[17:]:
         imp[i] = gini(X_train[i].mean())
     return imp
+
+def small_n(X_train, X_test):
+    cols = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
+    X_train[cols] = X_train[cols].where(X_train[cols].apply(lambda x: x.map(x.value_counts())) > 20, "other")
+    for column in cols:
+        for i in X_test[column].unique():
+            if i not in X_train[column].unique():
+                X_test[column].replace(i, 'other', inplace=True)
+    return X_train, X_test
+
+def op_time(X_train, X_test):
+    for i in [X_train, X_test]:
+        i['operation_time']=i.date_recorded.apply(lambda x: pd.to_datetime(x))-i.construction_year.apply(lambda x: pd.to_datetime(x))
+        i['operation_time']=i.operation_time.apply(lambda x: float(x.days)/365)
+        i.loc[i['operation_time'] < 0,i.columns=='operation_time'] = 63.92060232717317
+    return X_train, X_test
