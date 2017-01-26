@@ -34,8 +34,32 @@ def removal(X_train, X_test):
     # num_private: we will delete this column because ~99% of the values are zeros.
     # region: drop this b/c is seems very similar to region_code, though not 100% sure about this one!
     """
-    z = ['id','amount_tsh',  'num_private', 'wpt_name', 'subvillage', 'scheme_name', 'region', 
-          'recorded_by', 'quantity', 'quality_group', 'source_type', 'payment', 'waterpoint_type_group',
+    z = ['id','amount_tsh',  'num_private', 'wpt_name', 
+          'recorded_by', 'subvillage', 'scheme_name', 'region', 
+          'quantity', 'quality_group', 'source_type', 'payment', 
+          'waterpoint_type_group',
+         'extraction_type_group']
+    for i in z:
+        del X_train[i]
+        del X_test[i]
+    return X_train, X_test
+
+
+def removal2(X_train, X_test):
+    """
+    Here we define all the columns that we want to delete right off the bat.
+
+    # id: we drop the id column because it is not a useful predictor.
+    # 'amount_tsh' is mostly blank - delete
+    # wpt_name: not useful, delete (too many values)
+    # subvillage: too many values, delete
+    # scheme_name: this is almost 50% nulls, so we will delete this column
+    # num_private: we will delete this column because ~99% of the values are zeros.
+    # region: drop this b/c is seems very similar to region_code, though not 100% sure about this one!
+    """
+    z = ['id','amount_tsh',  'num_private', 'region', 
+          'quantity', 'quality_group', 'source_type', 'payment', 
+          'waterpoint_type_group',
          'extraction_type_group']
     for i in z:
         del X_train[i]
@@ -133,7 +157,7 @@ def codes(X_train, X_test):
     return X_train, X_test
 
 def dummies(X_train, X_test):
-    columns = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
+    columns = [i for i in X_train.columns if type(X_train[i].iloc[0]) == str]
     for column in columns:
         X_train[column].fillna('NULL', inplace = True)
         good_cols = [column+'_'+i for i in X_train[column].unique() if i in X_test[column].unique()]
@@ -181,7 +205,7 @@ def impurity(X_train):
     return imp
 
 def small_n(X_train, X_test):
-    cols = [i for i in X_train.columns if type(X_train[i].iloc[1]) == str]
+    cols = [i for i in X_train.columns if type(X_train[i].iloc[0]) == str]
     X_train[cols] = X_train[cols].where(X_train[cols].apply(lambda x: x.map(x.value_counts())) > 20, "other")
     for column in cols:
         for i in X_test[column].unique():
