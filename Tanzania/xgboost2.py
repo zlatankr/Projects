@@ -102,3 +102,90 @@ clf = GridSearchCV(xgb_model, parameters, n_jobs=4,
 
 clf.fit(X_train,y_train.values.ravel())
 
+######
+######
+
+# STEP 1: fix learning rate and number of estimators
+
+xgb1 = XGBClassifier(
+ learning_rate =0.25,
+ n_estimators=1000,
+ max_depth=5,
+ min_child_weight=1,
+ gamma=0,
+ subsample=0.8,
+ colsample_bytree=0.8,
+ objective= 'binary:logistic',
+ nthread=4,
+ scale_pos_weight=1,
+ seed=27)
+
+xgdmat = xgb.DMatrix(X_train.values, y_train.values)
+
+modelfit(xgb1, X_train,y_train.values.ravel())
+
+our_params = {'eta': 0.25, 'seed':0, 'subsample': 0.8, 'colsample_bytree': 0.8, 
+             'objective': 'multi:softmax', 'max_depth':5, 'min_child_weight':1, 'num_class': 3} 
+
+cv_xgb = xgb.cv(params = our_params, dtrain = xgdmat, num_boost_round = 1000, nfold = 3,
+                metrics = 'merror', # Make sure you enter metrics inside a list or you may encounter issues!
+                early_stopping_rounds = 50) # Look for early stopping that minimizes error
+
+cv_xgb
+
+### looks like our best iteration was at iteration 510...
+
+# STEP 2: Tune max_depth and min_child_weight
+
+param_test1 = cv_params = {'max_depth': [3, 5, 7], 'min_child_weight': [1, 3, 5]}
+
+gsearch1 = GridSearchCV(estimator = XGBClassifier( learning_rate =0.25, n_estimators=510,
+                                                  gamma=0, subsample=0.8, colsample_bytree=0.8,
+                                                  objective= 'multi:softmax', nthread=4, scale_pos_weight=1, seed=27),
+                                                  param_grid = param_test1, scoring='accuracy', iid=False, cv=2)
+
+gsearch1.fit(X_train,y_train.values.ravel())
+
+gsearch1.grid_scores_, gsearch1.best_params_, gsearch1.best_score_
+
+# STEP 3: Tune gamma
+
+## apparently, we want to tune the n_estimators after each hyperparameter tuning round...
+
+param_test2 = cv_params = {'gamma':[i/10.0 for i in range(0,5)]}
+
+gsearch2 = GridSearchCV(estimator = XGBClassifier( learning_rate =0.25, n_estimators=510,
+                                                  gamma=0, subsample=0.8, colsample_bytree=0.8,
+                                                  objective= 'multi:softmax', nthread=4, scale_pos_weight=1, seed=27),
+                                                  param_grid = param_test2, scoring='accuracy', iid=False, cv=2)
+
+gsearch1.fit(X_train,y_train.values.ravel())
+
+gsearch2.grid_scores_, gsearch2.best_params_, gsearch2.best_score_
+
+# STEP 4: Tune subsample and colsample_bytree
+
+param_test3 = cv_params = {'subsample':[i/10.0 for i in range(6,10)],
+                                        'colsample_bytree':[i/10.0 for i in range(6,10)]}
+
+gsearch3 = GridSearchCV(estimator = XGBClassifier( learning_rate =0.25, n_estimators=510,
+                                                  gamma=0, subsample=0.8, colsample_bytree=0.8,
+                                                  objective= 'multi:softmax', nthread=4, scale_pos_weight=1, seed=27),
+                                                  param_grid = param_test3, scoring='accuracy', iid=False, cv=2)
+
+gsearch3.fit(X_train,y_train.values.ravel())
+
+gsearch3.grid_scores_, gsearch3.best_params_, gsearch3.best_score_
+
+# STEP 5: Tuning Regularization Parameters
+
+param_test4 = cv_params = {'reg_alpha':[1e-5, 1e-2, 0.1, 1, 100]}
+
+gsearch4 = GridSearchCV(estimator = XGBClassifier( learning_rate =0.25, n_estimators=510,
+                                                  gamma=0, subsample=0.8, colsample_bytree=0.8,
+                                                  objective= 'multi:softmax', nthread=4, scale_pos_weight=1, seed=27),
+                                                  param_grid = param_test4, scoring='accuracy', iid=False, cv=2)
+
+gsearch4.fit(X_train,y_train.values.ravel())
+
+gsearch4.grid_scores_, gsearch4.best_params_, gsearch4.best_score_
