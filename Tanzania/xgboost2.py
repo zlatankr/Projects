@@ -189,3 +189,29 @@ gsearch4 = GridSearchCV(estimator = XGBClassifier( learning_rate =0.25, n_estima
 gsearch4.fit(X_train,y_train.values.ravel())
 
 gsearch4.grid_scores_, gsearch4.best_params_, gsearch4.best_score_
+
+
+## STEP 6: Build final model 
+    
+our_params = {'eta': 0.1, 'seed':0, 'subsample': 0.8, 'colsample_bytree': 0.8, 
+             'objective': 'multi:softmax', 'max_depth':7, 'min_child_weight':1, 'num_class': 3} 
+
+final_gb = xgb.train(our_params, xgdmat, num_boost_round = 510)
+
+importances = final_gb.get_fscore()
+importances
+
+# STEP 7: Run final model on test data
+
+testdmat = xgb.DMatrix(X_test.values)
+
+# Predict using our testdmat
+y_pred = final_gb.predict(testdmat)
+
+
+y_test = pd.read_csv('y_test.csv')
+pred = pd.DataFrame(y_pred, columns = [y_test.columns[1]])
+pred['status_group'].replace({0: 'functional', 1: 'non functional', 2: 'functional needs repair'}, inplace=True)
+del y_test['status_group']
+y_test = pd.concat((y_test, pred), axis = 1)
+y_test.to_csv(os.path.join('submission_files', 'y_test34.csv'), sep=",", index = False)
