@@ -118,6 +118,10 @@ Results:
 36. RF, y_test31 (OOB score 0.8147): 0.8056
 37. RF, y_test32 (OOB score 0.8131): 0.8040
 38. RF, y_test33: 0.08061
+39. RF, y_test32 (OOB score 0.8131): 0.7889
+39.5 RF: 0.8048
+40. RF, y_test36 (OOB score 0.8131): 0.8059
+41. RF, y_test35 (OOB score 0.8031): 0.8005
 
 
 Proper workflow:

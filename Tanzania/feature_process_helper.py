@@ -219,3 +219,12 @@ def op_time(X_train, X_test):
         i['operation_time']=i.operation_time.apply(lambda x: float(x.days)/365)
         i.loc[i['operation_time'] < 0,i.columns=='operation_time'] = 63.92060232717317
     return X_train, X_test
+
+def small_n2(X_train, X_test):
+    cols = [i for i in X_train.columns if type(X_train[i].iloc[0]) == str]
+    X_train[cols] = X_train[cols].where(X_train[cols].apply(lambda x: x.map(x.value_counts())) > 100, "other")
+    for column in cols:
+        for i in X_test[column].unique():
+            if i not in X_train[column].unique():
+                X_test[column].replace(i, 'other', inplace=True)
+    return X_train, X_test
