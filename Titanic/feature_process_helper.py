@@ -80,8 +80,20 @@ def ticket_grouped(train, test):
                                             'Low_ticket', 'Other_ticket'))
     return train, test
 
-
-
+def cabin_num(train, test):
+    for i in [train, test]:
+        i['Cabin_num1'] = i['Cabin'].apply(lambda x: str(x).split(' ')[-1][1:])
+        i['Cabin_num1'].replace('an', np.NaN, inplace = True)
+        i['Cabin_num1'] = i['Cabin_num1'].apply(lambda x: int(x) if not pd.isnull(x) and x <> '' else np.NaN)
+        i['Cabin_num'] = pd.qcut(train['Cabin_num1'],3)
+        #i['Cabin_num'] = i['Cabin_num'].isnull().apply(lambda x: float(x))
+    train = pd.concat((train, pd.get_dummies(train['Cabin_num'], prefix = 'Cabin_num')), axis = 1)
+    test = pd.concat((test, pd.get_dummies(test['Cabin_num'], prefix = 'Cabin_num')), axis = 1)
+    del train['Cabin_num']
+    del test['Cabin_num']
+    del train['Cabin_num1']
+    del test['Cabin_num1']
+    return train, test
 
 
 
