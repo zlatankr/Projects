@@ -1,0 +1,24 @@
+To do:
+- Drop 
+	- PassengerId
+	- Ticket
+- Impute values
+	- Age
+	- Cabin
+	- Embarked - fill as NA after manual check of data
+- Link columns, like parents and children
+- Dummy variable columns: 
+	- Pclass
+	- Name_Title
+		- Drop Name
+	- Sex
+	- Cabin_Letter
+		- Drop Cabin
+	- Embarked
+- New features:
+	- Name_Title
+	- Name_Len
+	- something with Parch and Sibsp??
+- Null flags
+	- Age
+	- Cabin_Letter (automatically created when we convert Cabin_let to dummy column)
