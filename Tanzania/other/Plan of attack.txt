@@ -1,5 +1,5 @@
 PLAN OF ATTACK
-
+--------------
 Cross-Validation Approach:
 - Nested k-fold cross-validation 
 	- no need for test set
