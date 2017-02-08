@@ -13,8 +13,23 @@ def names(train, test):
 def age_impute(train, test):
     for i in [train, test]:
         i['Age_Null_Flag'] = i['Age'].apply(lambda x: 1 if pd.isnull(x) else 0)
-        data = train.groupby(['Name_Title', 'Pclass'])['Age']
-        i['Age'] = data.transform(lambda x: x.fillna(x.mean()))
+    train['mean'] = train.groupby(['Name_Title', 'Pclass'])['Age'].transform('mean')
+    train['Age'] = train['Age'].fillna(train['mean'])
+    z = test.merge(train, on=['Name_Title', 'Pclass'], how='left').drop_duplicates(['PassengerId_x'])
+    test['Age'] = np.where(test['Age'].isnull(), z['mean'], test['Age'])
+    test['Age'] = test['Age'].fillna(test['Age'].mean())
+    del train['mean']
+    return train, test
+
+def age_impute2(train, test):
+    for i in [train, test]:
+        i['Age_Null_Flag'] = i['Age'].apply(lambda x: 1 if pd.isnull(x) else 0)
+    train['mean'] = train.groupby(['Name_Title', 'Pclass'])['Age'].transform('mean')
+    train['Age'] = train['Age'].fillna(train['mean'])
+    z = test.merge(train, on=['Name_Title', 'Pclass'], how='left').drop_duplicates(['PassengerId_x'])
+    test['Age'] = np.where(test['Age'].isnull(), z['mean'], test['Age'])
+    test['Age'] = test['Age'].fillna(test['Age'].mean())
+    del train['mean']
     return train, test
 
 def cabin(train, test):
@@ -49,6 +64,8 @@ def fam_size(train, test):
     for i in [train, test]:
         i['Fam_Size'] = np.where((i['SibSp']+i['Parch']) == 0 , 'Solo',
                            np.where((i['SibSp']+i['Parch']) <= 3,'Nuclear', 'Big'))
+        del i['SibSp']
+        del i['Parch']
     return train, test
 
 def lda(X_train, X_test, y_train, cols=['Age', 'Fare']):
@@ -78,6 +95,8 @@ def ticket_grouped(train, test):
         i['Ticket_Lett'] = np.where((i['Ticket_Lett']).isin(['1', '2', '3', 'S', 'P', 'C', 'A']), i['Ticket_Lett'],
                                    np.where((i['Ticket_Lett']).isin(['W', '4', '7', '6', 'L', '5', '8']),
                                             'Low_ticket', 'Other_ticket'))
+        i['Ticket_Len'] = i['Ticket'].apply(lambda x: len(x))
+        del i['Ticket']
     return train, test
 
 def cabin_num(train, test):
