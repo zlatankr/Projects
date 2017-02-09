@@ -99,6 +99,17 @@ def ticket_grouped(train, test):
         del i['Ticket']
     return train, test
 
+def ticket_grouped2(train, test):
+    for i in [train, test]:
+        i['Ticket_Lett'] = i['Ticket'].apply(lambda x: str(x)[0])
+        i['Ticket_Lett'] = i['Ticket_Lett'].apply(lambda x: str(x))
+        i['Ticket_Lett'] = np.where((i['Ticket_Lett']).isin(['1', '2', '3', 'S', 'P', 'C', 'A']), i['Ticket_Lett'],
+                                   np.where((i['Ticket_Lett']).isin(['W', '4', '7', '6', 'L', '5', '8']),
+                                            'Low_ticket', 'Other_ticket'))
+        i['Ticket_Len'] = i['Ticket'].apply(lambda x: len(x))
+        del i['Ticket']
+    return train, test
+
 def cabin_num(train, test):
     for i in [train, test]:
         i['Cabin_num1'] = i['Cabin'].apply(lambda x: str(x).split(' ')[-1][1:])

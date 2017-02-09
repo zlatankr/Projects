@@ -125,9 +125,11 @@ def age_impute(train, test):
     del train['mean']
     return train, test
 
-def locs2(X_train, X_test):
+
+def locs(X_train, X_test):
     """
-    gps_height, latitude, longitude, population
+    fill in the nulls for ['longitude', 'latitude', 'gps_height', 'population'] by using means from 
+    ['subvillage', 'district_code', 'basin'], and lastly the overall mean
     """
     trans = ['longitude', 'latitude', 'gps_height', 'population']
     for i in [X_train, X_test]:
@@ -136,44 +138,18 @@ def locs2(X_train, X_test):
         for i in [X_train, X_test]:
             i[z].replace(0., np.NaN, inplace = True)
             i[z].replace(1., np.NaN, inplace = True)
-
-        X_train['mean'] = X_train.groupby(['subvillage'])[z].transform('mean')
-        X_train[z] = X_train[z].fillna(X_train['mean'])
-        f = X_test.merge(X_train, on=['subvillage'], how='left').drop_duplicates(['id_x'])
-        X_test[z] = np.where(X_test[z].isnull(), f['mean'], X_test[z])
-
-        X_train['mean'] = X_train.groupby(['district_code'])[z].transform('mean')
-        X_train[z] = X_train[z].fillna(X_train['mean'])
-        f = X_test.merge(X_train, on=['district_code'], how='left').drop_duplicates(['id_x'])
-        X_test[z] = np.where(X_test[z].isnull(), f['mean'], X_test[z])
-
-        X_train['mean'] = X_train.groupby(['basin'])[z].transform('mean')
-        X_train[z] = X_train[z].fillna(X_train['mean'])
-        f = X_test.merge(X_train, on=['basin'], how='left').drop_duplicates(['id_x'])
-        X_test[z] = np.where(X_test[z].isnull(), f['mean'], X_test[z])
-
+        
+        for j in ['subvillage', 'district_code', 'basin']:
+        
+            X_train['mean'] = X_train.groupby([j])[z].transform('mean')
+            X_train[z] = X_train[z].fillna(X_train['mean'])
+            o = X_train.groupby([j])[z].mean()
+            fill = pd.merge(X_test, pd.DataFrame(o), left_on=[j], right_index=True, how='left').iloc[:,-1]
+            X_test[z] = X_test[z].fillna(fill)
+        
         X_train[z] = X_train[z].fillna(X_train[z].mean())
         X_test[z] = X_test[z].fillna(X_train[z].mean())
         del X_train['mean']
-    return X_train, X_test
-
-def locs(X_train, X_test):
-    """
-    gps_height, latitude, longitude, population
-    """
-    trans = ['longitude', 'latitude', 'gps_height', 'population']
-    for i in [X_train, X_test]:
-        i.loc[i.longitude == 0, 'latitude'] = 0
-        for z in trans:
-            i[z].replace(0., np.NaN, inplace = True)
-            i[z].replace(1., np.NaN, inplace = True)
-            data = i.groupby(['subvillage'])[z]
-            i[z] = data.transform(lambda x: x.fillna(x.mean()))
-            data = i.groupby(['district_code'])[z]
-            i[z] = data.transform(lambda x: x.fillna(x.mean()))
-            data = i.groupby(['basin'])[z]
-            i[z] = data.transform(lambda x: x.fillna(x.mean()))
-            i[z] = i[z].fillna(i[z].mean())
     return X_train, X_test
 
 def bools(X_train, X_test):
