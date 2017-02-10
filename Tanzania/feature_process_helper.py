@@ -13,9 +13,9 @@ def amount_tsh(X_train, X_test):
     """
     convert this item into a categorical variable
     """
-    for i in [X_train, X_test]:
-        i['amntsh'] = pd.qcut(X_train[X_train['amount_tsh'] <> 0]['amount_tsh'], 4)
-        i['amntshnull'] = i['amntsh'].isnull().apply(lambda x: float(x))
+    X_train['amntsh'], bins = pd.qcut(X_train[X_train['amount_tsh'] <> 0]['amount_tsh'], 4, retbins=True)
+    X_test['amntsh'] = pd.cut(X_test['amntsh'], bins=bins, include_lowest=True)
+    i['amntshnull'] = i['amntsh'].isnull().apply(lambda x: float(x))
     X_train = pd.concat((X_train, pd.get_dummies(X_train['amntsh'], prefix = 'amntsh')), axis = 1)
     X_test = pd.concat((X_test, pd.get_dummies(X_test['amntsh'], prefix = 'amntsh')), axis = 1)
     del X_train['amntsh']
@@ -34,7 +34,7 @@ def removal(X_train, X_test):
     # num_private: we will delete this column because ~99% of the values are zeros.
     # region: drop this b/c is seems very similar to region_code, though not 100% sure about this one!
     """
-    z = ['id','amount_tsh',  'num_private', 'wpt_name', 
+    z = ['id', 'amount_tsh',  'num_private', 'wpt_name', 
           'recorded_by', 'subvillage', 'scheme_name', 'region', 
           'quantity', 'quality_group', 'source_type', 'payment', 
           'waterpoint_type_group',
