@@ -1,4 +1,3 @@
-
 import os
 import pandas as pd
 import numpy as np
@@ -12,7 +11,7 @@ from sklearn.model_selection import StratifiedKFold
 get_ipython().magic(u'matplotlib inline')
 
 
-# # RF Model 14
+# ## RF 50
 
 # #### Load data & transform variables
 
@@ -27,16 +26,19 @@ train, test = feature_process_helper.embarked_impute(train, test)
 train, test = feature_process_helper.fam_size(train, test)
 train['Ticket_Len'] = train['Ticket'].apply(lambda x: len(x))
 test['Ticket_Len'] = test['Ticket'].apply(lambda x: len(x))
-train, test = feature_process_helper.ticket_grouped(train, test)
-train, test = feature_process_helper.dummies(train, test, columns = ['Pclass', 'Sex', 'Embarked', 'Ticket_Lett',
+train, test = feature_process_helper.dummies(train, test, columns = ['Pclass', 'Sex', 'Embarked',
                                                                      'Cabin_Letter', 'Name_Title', 'Fam_Size'])
-train, test = feature_process_helper.drop(train, test, bye = ['Ticket', 'SibSp', 'Parch'])
+train, test = feature_process_helper.drop(train, test, bye = ['Ticket'])
+
+
+
+len(train.columns)
 
 
 # #### Tune hyper-parameters
 
 
-rf14 = RandomForestClassifier(max_features='auto',
+rf = RandomForestClassifier(max_features='auto',
                                 oob_score=True,
                                 random_state=1,
                                 n_jobs=-1)
@@ -46,7 +48,7 @@ param_grid = { "criterion"   : ["gini", "entropy"],
              "min_samples_split" : [2, 4, 10, 12, 16],
              "n_estimators": [50, 100, 400, 700, 1000]}
 
-gs = GridSearchCV(estimator=rf14,
+gs = GridSearchCV(estimator=rf,
                   param_grid=param_grid,
                   scoring='accuracy',
                   cv=3,
@@ -55,49 +57,44 @@ gs = GridSearchCV(estimator=rf14,
 gs = gs.fit(train.iloc[:, 2:], train.iloc[:, 1])
 
 
+# #### Inspect best parameters
+
 
 print(gs.best_score_)
 print(gs.best_params_)
-#print(gs.cv_results_)
 
 
 # #### Fit model
 
-rf14 = RandomForestClassifier(criterion='gini', 
-                             n_estimators=700,
-                             min_samples_split=10,
+
+rf = RandomForestClassifier(criterion='entropy', 
+                             n_estimators=50,
+                             min_samples_split=16,
                              min_samples_leaf=1,
                              max_features='auto',
                              oob_score=True,
                              random_state=1,
                              n_jobs=-1)
-rf14.fit(train.iloc[:, 2:], train.iloc[:, 1])
-print "%.4f" % rf14.oob_score_ 
-
-
-# #### Obtain cross-validation score with optimal hyperparameters
-
-scores1 = cross_val_score(rf14, train.iloc[:, 2:], train.iloc[:, 1], n_jobs=-1)
-scores1.mean()
+rf.fit(train.iloc[:, 2:], train.iloc[:, 1])
+print "%.4f" % rf.oob_score_ 
 
 
 # #### Inspect feature ranking
 
 
 pd.concat((pd.DataFrame(train.iloc[:, 2:].columns, columns = ['variable']), 
-           pd.DataFrame(rf14.feature_importances_, columns = ['importance'])), 
-          axis = 1).sort_values(by='importance', ascending = False)[:20]
+           pd.DataFrame(rf.feature_importances_, columns = ['importance'])), 
+          axis = 1).sort_values(by='importance', ascending = False)
 
 
 # #### Generate submission file
 
 
 test['Fare'].fillna(train['Fare'].mean(), inplace = True)
-predictions = rf14.predict(test.iloc[:, 1:])
+predictions = rf.predict(test.iloc[:, 1:])
 predictions = pd.DataFrame(predictions, columns=['Survived'])
 predictions = pd.concat((test.iloc[:, 0], predictions), axis = 1)
-predictions.to_csv(os.path.join('submission_files', 'y_test14.csv'), sep=",", index = False)
+predictions.to_csv(os.path.join('submission_files', 'y_test50.csv'), sep=",", index = False)
 
 
-# Leaderboard score: 0.82775   
-# 150 out of 6048
+# Leaderboard score:  0.80383
