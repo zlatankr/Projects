@@ -19,12 +19,14 @@ def garageyrblt(train, test):
 
 def impute(train, test):
     for i in (train, test):
-        for s in ['LotFrontage', 'LotArea', 'MasVnrArea', 'BsmtFinSF1', 
-                              'BsmtFinSF2', '1stFlrSF', '2ndFlrSF', 'LowQualFinSF', 
-                              'GrLivArea', 'OpenPorchSF', 'EnclosedPorch', '3SsnPorch', 
-                              'ScreenPorch', 'PoolArea', 'BsmtUnfSF', 'TotalBsmtSF', 
-                              'BsmtFullBath', 'BsmtHalfBath', 'GarageCars', 'GarageArea']:
+        for s in [k for k in i.dtypes[i.dtypes != "object"].index if sum(pd.isnull(i[k])>0)]:
             i[s] = i[s].fillna(0)
+    return train, test
+
+def impute_mean(train, test):
+    for i in (train, test):
+        for s in [k for k in i.dtypes[i.dtypes != "object"].index if sum(pd.isnull(i[k])>0)]:
+            i[s] = i[s].fillna(i[s].mean())
     return train, test
 
 from sklearn.preprocessing import StandardScaler
@@ -65,3 +67,80 @@ def log(train, test, y):
 
     y = np.log1p(y)
     return train, test, y
+
+def ordinal(train, test):
+    translation_table = {              'FireplaceQu': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1,
+                                                'NoFireplace': 0 
+                                                },
+                                 'Fence': {'GdPrv': 2, 
+                                           'GdWo': 2, 
+                                           'MnPrv': 1, 
+                                           'MnWw': 1,
+                                           'NoFence': 0},
+                                 'ExterQual': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1
+                                                },
+                                 'ExterCond': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1
+                                                },
+                                 'BsmtQual': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1,
+                                                'NoBsmt': 0},
+                                 'BsmtExposure': {'Gd': 3, 
+                                                'Av': 2, 
+                                                'Mn': 1,
+                                                'No': 0,
+                                                'NoBsmt': 0},
+                                 'BsmtCond': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1,
+                                                'NoBsmt': 0},
+                                 'GarageQual': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1,
+                                                'NoGarage': 0},
+                                 'GarageCond': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1,
+                                                'NoGarage': 0},
+                                 'KitchenQual': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1},
+                                 'HeatingQC': {'Ex': 5, 
+                                                'Gd': 4, 
+                                                'TA': 3, 
+                                                'Fa': 2,
+                                                'Po': 1},
+                                 'Functional': {'Typ': 0,
+                                                'Min1': 1,
+                                                'Min2': 1,
+                                                'Mod': 2,
+                                                'Maj1': 3,
+                                                'Maj2': 4,
+                                                'Sev': 5,
+                                                'Sal': 6}                             
+                                }
+    train = train.replace(translation_table)
+    test = test.replace(translation_table)
+    return train, test
