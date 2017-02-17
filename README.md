@@ -1,1 +1,1 @@
-This is where all my projects are located.
+This is where all my projects are located. Open each folder to see the README files for that particular project.
