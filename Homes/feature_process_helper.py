@@ -2,9 +2,10 @@ import timeit
 import pandas as pd
 import numpy as np
 
-def mssubclass(train, test):
+def mssubclass(train, test, cols=['MSSubClass']):
     for i in (train, test):
-        i['MSSubClass'] = i['MSSubClass'].apply(lambda x: str(x))
+        for z in cols:
+            i[z] = i[z].apply(lambda x: str(x))
     return train, test
 
 def lotfrontage(train, test):
@@ -143,4 +144,14 @@ def ordinal(train, test):
                                 }
     train = train.replace(translation_table)
     test = test.replace(translation_table)
+    return train, test
+
+def month_sold(train, test):
+    remo = {}
+    ords = 1
+    for i in train['SalePrice'].groupby(train['MoSold']).mean().sort_values().index:
+        remo[i] = [ords]
+        ords += 1
+    for i in [train, test]:
+        i['MoSold'] = i['MoSold'].replace(remo)
     return train, test
