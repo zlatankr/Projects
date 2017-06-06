@@ -4,9 +4,6 @@ import re
 from bs4 import BeautifulSoup
 import datetime
 
-url = 'http://www.basketball-reference.com/boxscores/201611010IND.html'
-re.findall('[0-9]{8}', url)[0]
-
 def box_scores(url):
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
@@ -26,7 +23,7 @@ def box_scores(url):
         
         new = []
         for j in range(0,len(stats)-1):
-            if stats[j+1][:7] <> 'Did Not' and stats[j][:7] <> 'Did Not':
+            if (stats[j+1][:7] <> 'Did Not' and stats[j][:7] <> 'Did Not') and (stats[j+1][:8] <> 'Not With' and stats[j][:8] <> 'Not With'):
                 new.append(stats[j])
         new.append(stats[-1])
         stats_clean = [new[u:u+len_column_headers] for u in range(0, len(new), len_column_headers)]
@@ -42,25 +39,33 @@ def box_scores(url):
         boxes = boxes.append(stats_clean)
     
     boxes = boxes.rename(columns = dict(zip(boxes.columns, boxes.iloc[0,:])))
-    boxes = boxes.drop(boxes[boxes['Date'] == 'Date'].index)
+    boxes = boxes.rename(columns = {'Starters': 'Player'})
+    boxes = boxes.drop(boxes[boxes['MP'] == 'MP'].index)
+    boxes['Season'] = url[-17:-13] if url[-13] == '0' else str(int(url[-17:-13])+1)
+    boxes.replace('</td>', '', inplace=True)
     return boxes
 
 
 def get_schedule(years):
-    months = [datetime.date(2000, m, 1).strftime('%m - %B').split(' ')[-1].lower() for m in range(1, 13)]
+    months = [datetime.date(2000, m, 1).strftime('%m - %B').split(' ')[-1].lower() for m in [10,11,12,1,2,3,4]]
+    all_box_urls = []
     for year in years:
         for month in months:
-            url = 'http://www.basketball-reference.com/leagues/NBA_2013_games-'+month+'.html'
+            url = 'http://www.basketball-reference.com/leagues/NBA_'+str(year)+'_games-'+month+'.html'
             page = requests.get(url)
-            soup = str(BeautifulSoup(page.content, 'html.parser'))
+            if page.status_code == 404:
+                pass
+            else:
+                soup = str(BeautifulSoup(page.content, 'html.parser'))
+                try:
+                    soup = soup.replace(soup[soup.index('Playoffs</th></tr>'):],'')
+                except:
+                    pass
+                addresses = re.findall('box_score_text"><a href="(/boxscores/.+?html)', soup)
+                addresses = ['http://www.basketball-reference.com'+i for i in addresses]
+                all_box_urls.extend(addresses)
+    return all_box_urls
             
-            
-        
-
-
-
-
-
 
 
 
