@@ -65,11 +65,8 @@ def get_schedule(years):
                 addresses = ['http://www.basketball-reference.com'+i for i in addresses]
                 all_box_urls.extend(addresses)
     return all_box_urls
-            
 
-
-
-
+all_box_urls = get_schedule(range(1980,2018))
 
 
 
