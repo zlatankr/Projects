@@ -3,8 +3,12 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import datetime
+from sqlalchemy import create_engine
+import os
+import timeit
 
 def box_scores(url):
+    start = timeit.default_timer()
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     
@@ -43,13 +47,15 @@ def box_scores(url):
     boxes = boxes.drop(boxes[boxes['MP'] == 'MP'].index)
     boxes['Season'] = url[-17:-13] if url[-13] == '0' else str(int(url[-17:-13])+1)
     boxes.replace('</td>', '', inplace=True)
+    print timeit.default_timer() - start
     return boxes
-
+    
 
 def get_schedule(years):
     months = [datetime.date(2000, m, 1).strftime('%m - %B').split(' ')[-1].lower() for m in [10,11,12,1,2,3,4]]
     all_box_urls = []
     for year in years:
+        print year
         for month in months:
             url = 'http://www.basketball-reference.com/leagues/NBA_'+str(year)+'_games-'+month+'.html'
             page = requests.get(url)
@@ -68,12 +74,20 @@ def get_schedule(years):
 
 all_box_urls = get_schedule(range(1980,2018))
 
+engine = create_engine('mysql+pymysql://'+os.environ['dbuser']+':'+os.environ['pw']+'@z1.cdhwgvcyc4xh.us-west-1.rds.amazonaws.com/Z1')
 
-
-
-
-
-
+all_data = pd.DataFrame()
+for i in all_box_urls:
+    try:
+        box = box_scores(i)
+    except:
+        print 'error with', i
+        break
+    try:
+        pd.concat((all_data, box))
+    except:
+        print 'error with', i
+    
 
 
 
