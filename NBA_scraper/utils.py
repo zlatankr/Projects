@@ -77,25 +77,36 @@ all_box_urls = get_schedule(range(1980,2018))
 engine = create_engine('mysql+pymysql://'+os.environ['dbuser']+':'+os.environ['pw']+'@z1.cdhwgvcyc4xh.us-west-1.rds.amazonaws.com/Z1')
 
 all_data = pd.DataFrame()
-for i in all_box_urls:
+count = 23074
+for i in all_box_urls[23074:]:
+    print count,'of 42100'
     try:
         box = box_scores(i)
     except:
         print 'error with', i
         break
     try:
-        pd.concat((all_data, box))
+        all_data = pd.concat((all_data, box))
     except:
-        print 'error with', i
+        print 'error concating with', i
+    count += 1
     
 
+all_data.to_sql(name = 'nba_box_scores', con=engine, if_exists='replace',chunksize=1000)
 
 
+start = timeit.default_timer()
+page = requests.get(all_box_urls[1])
+soup = BeautifulSoup(page.content, 'html.parser')
 
 
-
-
-
+games = []
+for i in range(len(all_box_urls)):
+    page = requests.get(all_box_urls[i])
+    soup = BeautifulSoup(page.content, 'html.parser')
+    games.extend(re.findall('<meta content="Box Score -(.+?)" name="Description">', str(soup)))
+    if i % 100 == 0:
+        print i
 
 
 
