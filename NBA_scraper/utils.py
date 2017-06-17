@@ -27,12 +27,13 @@ def box_scores(url):
         
         new = []
         for j in range(0,len(stats)-1):
-            if (stats[j+1][:7] <> 'Did Not' and stats[j][:7] <> 'Did Not') and (stats[j+1][:8] <> 'Not With' and stats[j][:8] <> 'Not With'):
+            if (stats[j+1][:7] <> 'Did Not' and stats[j][:7] <> 'Did Not') and (stats[j+1][:8] <> 'Not With' and stats[j][:8] <> 'Not With') and (stats[j+1][:6] <> 'Player' and stats[j][:6] <> 'Player'):
                 new.append(stats[j])
         new.append(stats[-1])
         stats_clean = [new[u:u+len_column_headers] for u in range(0, len(new), len_column_headers)]
         teamid = re.findall('div_box_(.*?)_basic', i)[0]
         team = re.findall('id=\"box_'+teamid+'_basic\"><caption>(.*?)\(', str(soup))[0].strip()
+        print stats_clean
         stats_clean[0].insert(0,'Team')
         for z in range(1, len(stats_clean)):
             stats_clean[z].insert(0, team)
@@ -46,6 +47,7 @@ def box_scores(url):
     boxes = boxes.rename(columns = {'Starters': 'Player'})
     boxes = boxes.drop(boxes[boxes['MP'] == 'MP'].index)
     boxes['Season'] = url[-17:-13] if url[-13] == '0' else str(int(url[-17:-13])+1)
+    boxes['Feature'] = (re.findall('<meta content="Box Score -(.+?)" name="Description">', str(soup)))[0]
     boxes.replace('</td>', '', inplace=True)
     print timeit.default_timer() - start
     return boxes
@@ -105,77 +107,59 @@ for i in range(len(all_box_urls)):
     page = requests.get(all_box_urls[i])
     soup = BeautifulSoup(page.content, 'html.parser')
     games.extend(re.findall('<meta content="Box Score -(.+?)" name="Description">', str(soup)))
-    if i % 100 == 0:
-        print i
+    print i
+
+import calendar
 
 
+away = [re.findall('(.+?)\(', a)[0].strip() for a in games]
+home = [re.findall('vs.(.+?)\(', a)[0].strip() for a in games]
+away_points = [re.findall('\((.+?)\)', a)[0] for a in games]
+home_points = [re.findall('\((.+?)\)', a)[1] for a in games]
+year = [re.findall('- (.+)', a)[0].split()[2] for a in games]
+months = {k:v for v, k in enumerate(calendar.month_name)}
+month = [months[re.findall('- (.+)', a)[0].split()[0]] for a in games]
+day = [re.findall('- (.+)', a)[0].split()[1][:-1] for a in games]
+month_clean = [str(i) if len(str(i)) == 2 else '0' + str(i) for i in month]
+day_clean = [i if len(i) == 2 else '0' + i for i in day]
+date = [a+b+c for a, b, c in zip(year, month_clean, day_clean)]
 
+all_scores =  pd.DataFrame({'Home': home, 
+              'Away': away, 
+              'Away_Points': away_points, 
+              'Home_Points': home_points, 
+              'Game_Date': date, 
+              }
+                )
 
+def winner(row):
+    if int(row['Away_Points']) > int(row['Home_Points']):
+        return row['Away']
+    else:
+        return row['Home']
 
+def loser(row):
+    if int(row['Away_Points']) < int(row['Home_Points']):
+        return row['Away']
+    else:
+        return row['Home']
 
+all_scores['Winner'] = all_scores.apply(winner, axis=1)
+all_scores['Loser'] = all_scores.apply(loser, axis=1)
 
+all_scores.to_sql(name = 'nba_games_scores', con=engine, if_exists='replace', chunksize=1000)
 
+nba_box_scores = pd.read_sql_table('nba_box_scores', con=engine)
 
-page = requests.get(url)
+homes = pd.merge(nba_box_scores, all_scores, how='inner', left_on = ['Date', 'Team'], 
+         right_on = ['Game_Date', 'Home'])
 
-soup = BeautifulSoup(page.content, 'html.parser')
+aways = pd.merge(nba_box_scores, all_scores, how='inner', left_on = ['Date', 'Team'], 
+         right_on = ['Game_Date', 'Away'])
 
-# We can find individual box scores using a different `id` tag:
+both = pd.concat((homes, aways))
 
-re.findall('div_box_.*?_basic', str(soup))
+both['Win'] = both['Team'] == both['Winner']
+both['Win'] = both['Win'].apply(lambda x: int(x))
 
-re.findall('id=\"box_gsw_basic\"><caption>(.*?)\(', str(soup))
-
-box = soup.find_all(id="div_box_lal_basic")
-
-# note: need to change 'box' object into a string, since it's currently a BeautifulSoup' ResultSet object, which is useless to us
-box = str(box)
-
-# If we open up the box object as a text file, we can start to glean information about how the data is encoded. For example, we can get all the headers by doing a regex search for text starting with `col">`. 
-
-
-
-# Looking closer at the box object, we can see that the column headers _and_ the stats we seek are located inside a <data stat> tag:
-
-# Therefore, we can collect all of our data using regular expressions.
-
-
-stats = re.findall('data-stat=.+?>(.+?)<',box)
-
-# We need to clean up the data. First, let's delete the first item in the list, since that's just the table name:
-
-del stats[0]
-
-# Currently, our player names contain HTML encoding, so we will want to clean that up with with regular expressions.
-
-for i, m in enumerate(stats):
-    if len(re.findall('html">(.+)',str(m))) > 0:
-        stats[i] = re.findall('html">(.+)',str(m))[0]
-
-
-len_column_headers = len([th.getText() for th in 
-                  soup.findAll('tr', limit=2)[1].findAll('th')])
-
-a = []
-a.append(stats.index('Did Not Dress'))
-
-b = []
-for i in a:
-    b.append(i)
-    b.append(i-1)
-
-for index in sorted(b, reverse=True):
-    del stats[index]
-
-
-# Now we want to iterate through the list and group (i.e. subset into separate lists) the stats by their proper rows. 
-
-stats_clean = [stats[i:i+len_column_headers] for i in range(0, len(stats), len_column_headers)]
-
-teamid = re.findall('div_box_(.*?)_basic', 'div_box_lal_basic')[0]
-team = re.findall('id=\"box_'+teamid+'_basic\"><caption>(.*?)\(', str(soup))[0].strip()
-stats_clean[0].insert(0,'Team')
-# Now our stats are clean and ready to go. Our last step for this exercise will be to put the stats into Pandas DataFrame in order to resemble a true, clean box score. Although tehre is still cleanup that needs to be done (removing the reserves header column, as well as cleaning up percentages for non-shooters), we have done the majority of the work with a relatively few steps.
-
-
-pd.DataFrame(stats_clean[1:], columns=stats_clean[0])
+both.to_sql(name = 'nba_box_scores_detail', con=engine, if_exists='replace',chunksize=1000)
