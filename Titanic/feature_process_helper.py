@@ -114,7 +114,7 @@ def cabin_num(train, test):
     for i in [train, test]:
         i['Cabin_num1'] = i['Cabin'].apply(lambda x: str(x).split(' ')[-1][1:])
         i['Cabin_num1'].replace('an', np.NaN, inplace = True)
-        i['Cabin_num1'] = i['Cabin_num1'].apply(lambda x: int(x) if not pd.isnull(x) and x <> '' else np.NaN)
+        i['Cabin_num1'] = i['Cabin_num1'].apply(lambda x: int(x) if not pd.isnull(x) and x != '' else np.NaN)
     train['Cabin_num'], bins = pd.qcut(train['Cabin_num1'],3, retbins=True)
     test['Cabin_num'] = pd.cut(test['Cabin_num1'], bins=bins, include_lowest=True)
         #i['Cabin_num'] = i['Cabin_num'].isnull().apply(lambda x: float(x))
